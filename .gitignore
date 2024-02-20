@@ -1,3 +1,8 @@
+# dynamixle workbench
+dynamixel-workbench
+dynamixel-workbench-msgs
+DynamixelSDK
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
