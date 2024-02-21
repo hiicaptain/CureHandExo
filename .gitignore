@@ -1,7 +1,10 @@
 # dynamixle workbench
-dynamixel-workbench
-dynamixel-workbench-msgs
-DynamixelSDK
+src/dynamixel-workbench
+src/dynamixel-workbench-msgs
+src/DynamixelSDK
+src/CMakeLists.txt
+devel
+.catkin_workspace
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
