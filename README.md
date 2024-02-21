@@ -10,20 +10,20 @@ https://wiki.ros.org/noetic/Installation/Ubuntu
 python3 -m venv .venv
 source .venv/bin/activate
 git clone --recursive https://github.com/hiicaptain/CureHandExo.git
-# deactivate
+#deactivate
 '''
 
-## 3. install dynamixel Workbench
+## 3.1 install dynamixel Workbench for ros demo
 https://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_workbench/
 
-### 3.1 download the ros packages into src in the root
+### download the ros packages into src in the root
 '''
 git clone https://github.com/ROBOTIS-GIT/dynamixel-workbench.git
 git clone https://github.com/ROBOTIS-GIT/dynamixel-workbench-msgs.git
 git clone https://github.com/ROBOTIS-GIT/DynamixelSDK.git
 '''
 
-### 3.2 build the ros packages to 
+### build the ros packages to 
 initialise the workspace, you probably need to install Eigen3 library and yaml-cpp package
 '''
 cmake
@@ -43,12 +43,16 @@ echo "source ${YOUR_WORKSPACE_PATH}/devel/setup.bash" >> ~/.bashrc
 source ~/.bashrc
 '''
 
-### 
+### test
+'''
+rosrun dynamixel_workbench_controllers find_dynamixel /dev/ttyUSB0
+'''
 
-### 3. -setup DYNAMIXEL SDK library
+## 3.2 install dynamixel Workbench for cpp demo codes
+### setup DYNAMIXEL SDK library
 http://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_sdk/library_setup/cpp_linux/#build-the-library
 
-### 3. -setup DYNAMIXEL Workbench toolbox library
+### setup DYNAMIXEL Workbench toolbox library
 ```
 $ cd ${YOUR_DOWNLOAD_PATH}/dynamixel_workbench/dynamixel_workbench_toolbox/examples
 $ mkdir build && cd build
@@ -58,7 +62,7 @@ $ sudo chmod a+rw /dev/ttyUSB0
 $ ./find_dynamixel /dev/ttyUSB0
 ```
 
-# Usage
+# Debug
 This run file configures the usb latency timer to 1 ms. If you want to check this setting, run the following command in a terminal window.
 '''
 cat /sys/bus/usb-serial/devices/ttyUSB0/latency_timer
