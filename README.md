@@ -16,12 +16,34 @@ git clone --recursive https://github.com/hiicaptain/CureHandExo.git
 ## 3. install dynamixel Workbench
 https://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_workbench/
 
-### 3.1 download the ros package
+### 3.1 download the ros packages into src in the root
 '''
 git clone https://github.com/ROBOTIS-GIT/dynamixel-workbench.git
 git clone https://github.com/ROBOTIS-GIT/dynamixel-workbench-msgs.git
 git clone https://github.com/ROBOTIS-GIT/DynamixelSDK.git
 '''
+
+### 3.2 build the ros packages to 
+initialise the workspace, you probably need to install Eigen3 library and yaml-cpp package
+'''
+cmake
+sudo apt-get update
+sudo apt-get install libeigen3-dev
+sudo apt-get install libyaml-cpp-dev
+'''
+
+source the workspace
+'''
+source devel/setup.bash
+'''
+
+To avoid having to source the setup file in every new terminal session manually, you can add the source command to your .bashrc file:
+'''
+echo "source ${YOUR_WORKSPACE_PATH}/devel/setup.bash" >> ~/.bashrc
+source ~/.bashrc
+'''
+
+### 
 
 ### 3. -setup DYNAMIXEL SDK library
 http://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_sdk/library_setup/cpp_linux/#build-the-library
