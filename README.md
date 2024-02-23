@@ -65,7 +65,10 @@ sudo chmod a+rw /dev/ttyUSB0
 # Debug
 This run file configures the usb latency timer to 1 ms. If you want to check this setting, run the following command in a terminal window.
 ```
+# check the latency time
 cat /sys/bus/usb-serial/devices/ttyUSB0/latency_timer
+# set the latency time to 1 ms
+echo 1 | sudo tee /sys/bus/usb-serial/devices/ttyUSB0/latency_timer
 ```
 
 
