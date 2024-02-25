@@ -1,0 +1,58 @@
+# 360 degree, binary code: 0-1023, 0.3 degree per unit
+MCP_controller:
+    controller:
+        package: dynamixel_controllers
+        module: joint_torque_controller
+        type: JointTorqueController
+    joint_name: MCP_joint
+    joint_speed: 1.17
+    motor:
+        id: 0
+        init: 0
+        min: 0
+        max: 1023 
+# extend to flex: 150-280 degree ini 540
+
+PIP_controller:
+    controller:
+        package: dynamixel_controllers
+        module: joint_torque_controller
+        type: JointTorqueController
+    joint_name: PIP_joint
+    joint_speed: 1.17
+    motor:
+        id: 1
+        init: 0
+        min: 900
+        max: 0
+# extend to flex: 240-160 degree ini 650
+
+DIP_controller:
+    controller:
+        package: dynamixel_controllers
+        module: joint_torque_controller
+        type: JointTorqueController
+    joint_name: DIP_joint
+    joint_speed: 1.17
+    motor:
+        id: 2
+        init: 0
+        min: 0
+        max: 1023
+# extend to flex: 150-230 degree ini 500
+
+IP_controller:
+    controller:
+        package: dynamixel_controllers
+        module: joint_torque_controller
+        type: JointTorqueController
+    joint_name: IP_joint
+    joint_speed: 1.17
+    motor:
+        id: 3
+        init: 0
+        min: 0
+        max: 1023
+# extend to flex: ? 
+
+

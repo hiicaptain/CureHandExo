@@ -1,3 +1,8 @@
+# Old software
+/Exo_rebuilt/data
+/Exo_rebuilt/image
+/Exo_rebuilt/__pycache__
+
 # dynamixle workbench
 src/dynamixel-workbench
 src/dynamixel-workbench-msgs

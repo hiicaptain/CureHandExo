@@ -1,0 +1,12 @@
+<launch>
+    <!-- Start pan joint controller -->
+    <rosparam file="motor_para.yaml" command="load"/>
+    <node name="meta_controller_spawner" pkg="dynamixel_controllers" type="controller_spawner.py"
+          args="--manager=dxl_manager
+                --port pan_tilt_port
+                MCP_controller
+                PIP_controller
+                DIP_controller
+                IP_controller"
+          output="screen"/>
+</launch>
