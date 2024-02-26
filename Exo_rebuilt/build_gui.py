@@ -10,7 +10,6 @@ import numpy as np
 from scipy import signal
 
 from std_msgs.msg import String, Float64, Int32
-import os
 
 # tkinter librairies
 import tkinter as tk
@@ -28,10 +27,7 @@ grey_color = '#d9d9d9'
 '''-------------------------------- Main page ------------------------------'''
 class AppGUI:
 # Contructor of the main page
-    def __init__(self, master):   
-        self.current_directory = os.getcwd()
-        self.count = 0
-        
+    def __init__(self, master):    
         #Create the window
         self.master = master
         self.master.geometry ("900x400+40+10")
@@ -44,7 +40,7 @@ class AppGUI:
         
         # publish the assessment mode
         rospy.init_node('GUI', anonymous=True)
-        self.pub_mode = rospy.Publisher('/Assessment_mode', Int32, queue_size=10)
+        self.pub_mode = rospy.Publisher('/Assessment_mode', String, queue_size=10)
         
         # get force sensor values
         rospy.Subscriber("/Sensor_value", String, self.callbackForce)
@@ -57,16 +53,16 @@ class AppGUI:
         rospy.Subscriber("/IP_controller/state", JointStateDynamixel, self.callbackAngle(3))
         self.angles = [0, 0, 0, 0]
         
-        # Frame
-        self.Ready =  tk.Button(self.master, text="extend", font='Helvetica 16 bold', command= lambda: self.setMode(0))
-        self.Ready.place(relx=0.2, rely=0.2, height=40, width=100)
-        self.Ready.configure(background=blue_color)
-        self.Ready.configure(foreground=white_color)  
+        # GUI Frame
+        self.Ext =  tk.Button(self.master, text="extend", font='Helvetica 16 bold', command= lambda: self.setMode(0, 0))
+        self.Ext.place(relx=0.2, rely=0.2, height=40, width=100)
+        self.Ext.configure(background=blue_color)
+        self.Ext.configure(foreground=white_color)  
         
-        self.Ready =  tk.Button(self.master, text="flex", font='Helvetica 16 bold', command= lambda: self.setMode(0))
-        self.Ready.place(relx=0.2, rely=0.4, height=40, width=100)
-        self.Ready.configure(background=blue_color)
-        self.Ready.configure(foreground=white_color)  
+        self.Fle =  tk.Button(self.master, text="flex", font='Helvetica 16 bold', command= lambda: self.setMode(0, 1))
+        self.Fle.place(relx=0.2, rely=0.4, height=40, width=100)
+        self.Fle.configure(background=blue_color)
+        self.Fle.configure(foreground=white_color)  
         
         self.MoveLabel = tk.Label(self.master, text="input the moving distance",font='Helvetica 16 bold')
         self.MoveLabel.place(relx=0.4, rely=0.2, height=40, width=300)
@@ -88,22 +84,22 @@ class AppGUI:
         self.VelCommand.configure(background=blue_color)
         self.VelCommand.configure(foreground=white_color)
         
-        self.IPButton = tk.Button(self.master, text="IP", font='Helvetica 16 bold', command= lambda: self.setMode(1))
+        self.IPButton = tk.Button(self.master, text="IP", font='Helvetica 16 bold', command= lambda: self.setMode(1, 0))
         self.IPButton.place(relx=0.2, rely=0.6, height=60, width=100)
         self.IPButton.configure(background=blue_color)
         self.IPButton.configure(foreground=white_color)
         
-        self.MCPButton = tk.Button(self.master, text="MCP", font='Helvetica 16 bold', command= lambda: self.setMode(2))
+        self.MCPButton = tk.Button(self.master, text="MCP", font='Helvetica 16 bold', command= lambda: self.setMode(1, 1))
         self.MCPButton.place(relx=0.4, rely=0.6, height=60, width=100)
         self.MCPButton.configure(background=blue_color)
         self.MCPButton.configure(foreground=white_color)
 
-        self.PIPButton = tk.Button(self.master, text="PIP", font='Helvetica 16 bold', command= lambda: self.setMode(3))
+        self.PIPButton = tk.Button(self.master, text="PIP", font='Helvetica 16 bold', command= lambda: self.setMode(1, 2))
         self.PIPButton.place(relx=0.6, rely=0.6, height=60, width=100)
         self.PIPButton.configure(background=blue_color)
         self.PIPButton.configure(foreground=white_color)
         
-        self.DIPButton = tk.Button(self.master, text="DIP", font='Helvetica 16 bold', command= lambda: self.setMode(4))
+        self.DIPButton = tk.Button(self.master, text="DIP", font='Helvetica 16 bold', command= lambda: self.setMode(1, 3))
         self.DIPButton.place(relx=0.8, rely=0.6, height=60, width=100)
         self.DIPButton.configure(background=blue_color)
         self.DIPButton.configure(foreground=white_color)
@@ -127,12 +123,23 @@ class AppGUI:
         self.ForceLabel3.place(relx=0.8, rely=0.8, height=60, width=150)
         self.ForceLabel3.configure(background=grey_color)
         self.ForceLabel3.configure(foreground=black_color)
+
+        self.Stop = tk.Button(self.master, text="Stop", font='Helvetica 16 bold', command= lambda: self.setMode(99))
         
         self.update_force()
         
     # send mode commands
-    def setMode(self, modeID):
-        self.pub_mode.publish(modeID)
+    def setMode(self, modeID = 99, motorID = 0):
+        if modeID == 0:
+            message = str(modeID) + " " + str(motorID) # motorID = 0, extend; motorID = 1, flex
+            self.pub_mode.publish(message)
+        elif modeID == 1:
+            distance = float(self.MoveCommand.get())
+            max_vel = float(self.VelCommand.get())
+            message = str(modeID) + " " + str(motorID) + " " + str(distance) + " " + str(max_vel)
+            self.pub_mode.publish(message)
+        else:
+            self.pub_mode.publish(str(modeID))
         
     # This funtion is called everytime "/Sensor_value" receives a value
     def callbackForce(self, data):    
@@ -160,6 +167,6 @@ class AppGUI:
         self.ForceLabel2.configure(text="%s " % round(self.forces[2],3))
         self.ForceLabel3.configure(text="%s " % round(self.forces[3],3))
         
-        # Schedule the next update
+        # Schedule the next update, every 0.2 seconds
         self.master.after(200, self.update_force)
 

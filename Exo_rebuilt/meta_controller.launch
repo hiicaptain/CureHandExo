@@ -4,9 +4,9 @@
     <node name="meta_controller_spawner" pkg="dynamixel_controllers" type="controller_spawner.py"
           args="--manager=dxl_manager
                 --port pan_tilt_port
+                IP_controller
                 MCP_controller
                 PIP_controller
-                DIP_controller
-                IP_controller"
+                DIP_controller"
           output="screen"/>
 </launch>
