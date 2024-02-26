@@ -125,6 +125,9 @@ class AppGUI:
         self.ForceLabel3.configure(foreground=black_color)
 
         self.Stop = tk.Button(self.master, text="Stop", font='Helvetica 16 bold', command= lambda: self.setMode(99))
+        self.Stop.place(relx=0.9, rely=0.9, height=50, width=50)
+        self.Stop.configure(background=grey_color)
+        self.Stop.configure(foreground=black_color)        
         
         self.update_force()
         

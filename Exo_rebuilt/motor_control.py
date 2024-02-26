@@ -73,6 +73,7 @@ class MotorController():
     def callbackAngle(self, motor_ID):
         def callback(data):
             self.angles[motor_ID] = data.current_pos
+            # print(str(motor_ID)+":"+str(self.angles[motor_ID]))
         return callback
     
     # This funtion is called everytime "/Sensor_value" receives a value
@@ -85,7 +86,7 @@ class MotorController():
             self.forces[2] = float(force_values[2])/100 # PIP
             self.forces[3] = float(force_values[3])/100 # DIP          
         else:
-            print("force data error")
+            rospy.loginfo("force data error")
 
     # This funtion is called everytime "/assessment_mode" receives a value        
     def callbackMode(self, data):
@@ -94,29 +95,44 @@ class MotorController():
         # Extract individual parameters and convert them if necessary
         # Ensure that there are exactly 3 parameters in the message for safety
         if len(params) == 4:
+            # count the number of assessment
+            self.count += 1
+
             mode, motor, distance, maxvel = params  # Unpack the list into variables
             self.mode = int(mode)  # Convert mode to int
             self.motor = int(motor)  # Convert motor to int
             self.maxvel = float(maxvel)  # Convert maxvel to float
-            rospy.loginfo(str(mode) + " " + str(distance) + " " + str(maxvel))
             
             current_position = self.angles[self.motor]
             self.goal_position = current_position + float(distance)
             self.starting_time = time.time()
 
-            # count the number of assessment
-            self.count += 1
+            rospy.loginfo("exp" + str(self.count) + ": " + self.joints[self.motor] + " moves to " + str(self.goal_position) + "rad with max velocity " + str(self.maxvel) + "rad/s")
+            self.time_array = [0]
+            self.angle_array = [current_position]
+            self.force_array = [self.forces[self.motor]]
+            self.e_i = 0
+            self.e_old = 0
 
         elif len(params) == 1:
             mode = params[0]
             self.mode = int(mode)
-            rospy.loginfo(str(mode))
+            rospy.loginfo("stop: " + str(mode))
+
         elif len(params) == 2:
             mode, inimode = params
             self.mode = int(mode)
             self.inimode = int(inimode)
-            rospy.loginfo(str(mode) + " " + str(inimode))
+            if self.inimode == 0:
+                rospy.loginfo("extending")
+            elif self.inimode == 1:
+                rospy.loginfo("flexing")
+            else:
+                rospy.loginfo("error command for initialisation mode")
+                self.mode = 99
+
         else:
+            rospy.loginfo("error: " + str(data.data))
             self.mode = 99
         # TO DO: Add an else statement to handle the case where the message is not in the expected format
         # TO DO: different modes will send different parameters
@@ -136,29 +152,29 @@ class MotorController():
     def setPos(self, ID, goal_position):
         current_position = self.angles[ID]
         e = goal_position - current_position
-        maxvel = 6
-        minvel = 2
+        maxvel = 4
+        minvel = 0
         vel = self.KP*e + minvel
         if abs(vel) > maxvel:
-            vel = maxvel
+            vel = maxvel*np.sign(vel)
+        if abs(e) < 0.05:
+            vel = 0
         self.setVel(ID, vel)
         
     def controlloop(self):
         rate = rospy.Rate(50)
-        print("initialise assessment")
+        rospy.loginfo("initialised assessment")
         while not rospy.is_shutdown():
             try:
                 if self.mode == 0:
                     self.initialise()
-                    print("0")
                 elif self.mode == 1:
                     self.assess()
-                    print("1")
                 else:
                     self.stop()
-            except:
-                print("Be trying again")
-        rate.sleep()
+            except Exception as e:
+                 rospy.logerr("Failed to set the mode: %s", str(e))  # Log the error message with the exception
+            rate.sleep()
     
     # Stop the motors at the current position
     def stop(self):
@@ -166,22 +182,22 @@ class MotorController():
         self.setVel(1, 0)
         self.setVel(2, 0)
         self.setVel(3, 0)
-        print ("Assessment is stopped")
+        #print(time.time())
     
     # Extend or flex the motors to the initial position
     def initialise(self):
         if self.inimode == 0:
             self.setPos(0, 0)
-            self.setPos(1, 0)
-            self.setPos(2, 0)
-            self.setPos(3, 0)
+            print(self.angles[0])
+            #self.setPos(1, 0)
+            #self.setPos(2, 0)
+            #self.setPos(3, 0)
         elif self.inimode == 1:
-            self.setPos(0, 3)
-            self.setPos(1, 3)
-            self.setPos(2, 3)
-            self.setPos(3, 3)
-        else:
-            print("Initialisation mode error")
+            self.setPos(0, 1)
+            print(self.angles[0])
+            #self.setPos(1, 3)
+            #self.setPos(2, 3)
+            #self.setPos(3, 3)
 
     # Move the motor to the desired position
     def assess(self):
@@ -189,32 +205,34 @@ class MotorController():
         sampling_time = time.time() 
         time_tag = sampling_time - self.starting_time
         angle = round(self.angles[ID], 2)
+        e = self.goal_position - angle
         if  time_tag <= 0.5:
             self.setVel(ID, 0)
-        elif time_tag <= 4.5 & time_tag > 0.5:      
-            e = self.goal_position - angle
+            rospy.loginfo("Wait for 0.5s")
+        elif time_tag <= 4.5 and time_tag > 0.5:
             e_d = (e - self.e_old)/self.dt
             self.e_i = self.e_i + e
             self.e_old = e
             vel = self.KP*e + self.KD*e_d + self.KI*self.e_i
             if abs(vel) > self.maxvel:
-                vel = self.maxvel
+                vel = self.maxvel*np.sign(vel)
             self.setVel(ID, vel)
-        elif time_tag > 4.5:
-            self.setVel(ID, 0)    
+            rospy.loginfo("Moving")
+        elif time_tag > 4.5 and time_tag <= 5.0:
+            self.setVel(ID, 0) 
+            rospy.loginfo("Stop for 0.5s")   
         else:
-            print("Complete the assessment")
+            rospy.loginfo("Complete the assessment")
             # save data
-            self.saveData(self.time_array, self.force_array, self.angle_array, self.joints(ID))
+            self.saveData(self.time_array, self.force_array, self.angle_array, self.joints[ID])
             # draw plot
-            self.plotCurves(self.time_array, self.force_array, self.angle_array, self.joints(ID))
+            self.plotCurves(self.time_array, self.force_array, self.angle_array, self.joints[ID])
             # reset the mode
             self.mode = 99
 
-        angle = round(self.angles[ID], 2)
         self.angle_array.append(angle)
         self.force_array.append(self.forces[ID])
-        self.time_array.append(sampling_time-self.starting_time)
+        self.time_array.append(time_tag)
 
     # Save the data to a csv file
     def saveData(self, time_array, force_array, angle_array, joint_name):
