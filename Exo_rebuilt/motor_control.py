@@ -49,8 +49,8 @@ class MotorController():
         # PID controller
         self.rate = 50 # hz
         self.KP = 50
-        self.KI = 0.1
         self.KD = 2
+        self.KI = 0.2
 
         self.e_i = 0
         self.e_old = 0
@@ -72,7 +72,10 @@ class MotorController():
     # Subscrib the current position of four motors 
     def callbackAngle(self, motor_ID):
         def callback(data):
-            self.angles[motor_ID] = data.current_pos
+            if motor_ID == 2:
+                self.angles[motor_ID] = -data.current_pos
+            else:
+                self.angles[motor_ID] = data.current_pos
             # print(str(motor_ID)+":"+str(self.angles[motor_ID]))
         return callback
     
@@ -144,22 +147,24 @@ class MotorController():
         elif ID is 1:
             self.pubMCP.publish(vel)                      
         elif ID is 2:
-            self.pubPIP.publish(vel)
+            self.pubPIP.publish(-vel)
         elif ID is 3:
             self.pubDIP.publish(vel)
         return False
     
-    def setPos(self, ID, goal_position):
+    def setPos(self, ID, goal_position, complete = 0):
         current_position = self.angles[ID]
         e = goal_position - current_position
-        maxvel = 4
+        maxvel = 2
         minvel = 0
         vel = self.KP*e + minvel
         if abs(vel) > maxvel:
             vel = maxvel*np.sign(vel)
-        if abs(e) < 0.05:
+        if abs(e) < 0.1:
+            complete = 1
             vel = 0
         self.setVel(ID, vel)
+        return complete
         
     def controlloop(self):
         rate = rospy.Rate(50)
@@ -182,22 +187,29 @@ class MotorController():
         self.setVel(1, 0)
         self.setVel(2, 0)
         self.setVel(3, 0)
-        #print(time.time())
     
     # Extend or flex the motors to the initial position
     def initialise(self):
+        flag = [0,0,0,0]
         if self.inimode == 0:
-            self.setPos(0, 0)
-            print(self.angles[0])
-            #self.setPos(1, 0)
-            #self.setPos(2, 0)
-            #self.setPos(3, 0)
+            flag[0] = self.setPos(0, 0)
+            # time.sleep(0.5)
+            flag[1] = self.setPos(1, 0)
+            # time.sleep(0.5)
+            flag[2] = self.setPos(2, 0)
+            # time.sleep(0.5)
+            flag[3] = self.setPos(3, 0)
         elif self.inimode == 1:
-            self.setPos(0, 1)
-            print(self.angles[0])
-            #self.setPos(1, 3)
-            #self.setPos(2, 3)
-            #self.setPos(3, 3)
+            flag[0] = self.setPos(0, 0)
+            # time.sleep(0.5)
+            flag[1] = self.setPos(1, 1.8)
+            # time.sleep(0.5)
+            flag[2] = self.setPos(2, 0)
+            # time.sleep(0.5)
+            flag[3] = self.setPos(3, 0)
+        if sum(flag) == 4:
+            self.mode = 99
+            rospy.loginfo("Initialisation complete")
 
     # Move the motor to the desired position
     def assess(self):
@@ -211,7 +223,7 @@ class MotorController():
             rospy.loginfo("Wait for 0.5s")
         elif time_tag <= 4.5 and time_tag > 0.5:
             e_d = (e - self.e_old)/self.dt
-            self.e_i = self.e_i + e
+            self.e_i = self.e_i + e*self.dt
             self.e_old = e
             vel = self.KP*e + self.KD*e_d + self.KI*self.e_i
             if abs(vel) > self.maxvel:

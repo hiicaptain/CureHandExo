@@ -76,7 +76,7 @@ void loop() {
     
   sprintf(All_data, "%d,%d,%d,%d", mcp1, mcp2, pip, dip);
   Serial.println(All_data);
-  while ((millis() - starttime) < 12.5){}  
+  while ((millis() - starttime) < 20){}  
 }
 
 HX711 SensorCalibration(HX711 sensor, int DataPin, int ClkPin, String name)
