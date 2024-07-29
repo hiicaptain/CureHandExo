@@ -8,9 +8,9 @@ IP_controller:
     joint_speed: 1.17
     motor:
         id: 0
-        init: 300
-        min: 200
-        max: 600
+        init: 350
+        min: 350
+        max: 650
 # extend to flex: ? 
 
 MCP_controller:
@@ -23,8 +23,8 @@ MCP_controller:
     motor:
         id: 1
         init: 550
-        min: 500
-        max: 900
+        min: 550
+        max: 850
 # extend to flex: 150-280 degree
 
 PIP_controller:
@@ -36,9 +36,9 @@ PIP_controller:
     joint_speed: 1.17
     motor:
         id: 2
-        init: 650
-        min: 300
-        max: 700
+        init: 600
+        min: 350
+        max: 630
 # flex to extend:
 
 DIP_controller:
@@ -50,8 +50,8 @@ DIP_controller:
     joint_speed: 1.17
     motor:
         id: 3
-        init: 350
-        min: 300
+        init: 400
+        min: 400
         max: 650
 # extend to flex: 150-230 degree
 

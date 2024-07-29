@@ -47,10 +47,10 @@ class AppGUI:
         self.forces = [0, 0, 0, 0]
         
         # get motor angle values
-        rospy.Subscriber("/MCP_controller/state", JointStateDynamixel, self.callbackAngle(0))
-        rospy.Subscriber("/PIP_controller/state", JointStateDynamixel, self.callbackAngle(1))
-        rospy.Subscriber("/DIP_controller/state", JointStateDynamixel, self.callbackAngle(2))
-        rospy.Subscriber("/IP_controller/state", JointStateDynamixel, self.callbackAngle(3))
+        rospy.Subscriber("/IP_controller/state", JointStateDynamixel, self.callbackAngle(0))
+        rospy.Subscriber("/MCP_controller/state", JointStateDynamixel, self.callbackAngle(1))
+        rospy.Subscriber("/PIP_controller/state", JointStateDynamixel, self.callbackAngle(2))
+        rospy.Subscriber("/DIP_controller/state", JointStateDynamixel, self.callbackAngle(3))
         self.angles = [0, 0, 0, 0]
         
         # GUI Frame

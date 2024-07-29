@@ -15,7 +15,7 @@ except OSError as e:
 def talker():
     rospy.init_node('Sensor_value', anonymous=True)
     pub_value = rospy.Publisher('/Sensor_value', String, queue_size=10)
-    rate = rospy.Rate(50)
+    rate = rospy.Rate(100)
     while not rospy.is_shutdown(): 
         while True:
             try:
