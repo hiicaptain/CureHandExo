@@ -29,13 +29,13 @@ namespace Waveplus.CureHand
             _isFirstIdleState = true;
             _installedSensor = 0;
             // Create sensor status controls
-            _sensorNumberLabels = new Label[DeviceConstant.MAX_SENSORS_NUM];
-            _sensorBatteryLevelBars = new ProgressBar[DeviceConstant.MAX_SENSORS_NUM];
+            _sensorNumberLabels = new Label[DeviceConstant.MAX_DEVICE_SENSORS_NUM];
+            _sensorBatteryLevelBars = new ProgressBar[DeviceConstant.MAX_DEVICE_SENSORS_NUM];
 
             // Create sensor battery level status controls
             const int startY = 5;
             const int deltaY = 20;
-            for (var i = 0; i < DeviceConstant.MAX_SENSORS_NUM; i++)
+            for (var i = 0; i < DeviceConstant.MAX_DEVICE_SENSORS_NUM; i++)
             {
                 SensorStatePanel.Controls.Add(_sensorNumberLabels[i] = new Label
                 {
@@ -143,7 +143,7 @@ namespace Waveplus.CureHand
                         _isFirstIdleState = false;
                     }
                     // Change RF channel controls
-                    ChangeMasterRFChannelGroupBox.Enabled = true;
+                    ChangeMasterRFChannelGroupBox.Enabled = false;
                     //Importing from memory controls
                     MemoryStartImportingButton.Enabled = true;
                     MemoryStopImportingButton.Enabled = false;
@@ -354,6 +354,43 @@ namespace Waveplus.CureHand
             FswABatteryLevelProgressBar.Value = state;
             state = (byte)(e.FootSwSensorStates[1, 0] & 0x03);
             FswBBatteryLevelProgressBar.Value = state;
+
+            // sensor average values
+            float firstSensorAverage = CalculateAverage(e.Samples, 0);
+            float secondSensorAverage = CalculateAverage(e.Samples, 1);
+
+            // display the sensor data
+            string averageText = $"1: {firstSensorAverage:F2} 2: {secondSensorAverage:F2}";
+            EmgSampleTextBox.Text = averageText;
+
+            // current time 
+            double currentTime = _acquiredSamplesPerChannel*0.5 - 1.0;
+
+            // creat csv data
+            System.Text.StringBuilder csvData = new System.Text.StringBuilder();
+            int dataPointsCount = e.Samples.GetLength(1);
+            for (int i = 1; i < dataPointsCount; i++)
+            {
+                double time = currentTime - 0.5 * (dataPointsCount - 1 - i);
+                string line = $"{time},{e.Samples[0, i]},{e.Samples[1, i]}";
+                csvData.AppendLine(line);
+            }
+
+            string filePath = @"D:\share\emg_data.csv";
+            File.AppendAllText(filePath, csvData.ToString());
+
+            float CalculateAverage(float [,] samples, int sensorIndex)
+            {
+                int length = samples.GetLength(1); 
+                float sum = 0;
+
+                for (int i = 0; i < length; i++)
+                {
+                    sum += samples[sensorIndex, i];
+                }
+
+                return sum / length;
+            }
         }
 
         void SensorMemory_DataAvailable(object sender, SensorMemoryDataAvailableEventArgs e)
@@ -484,7 +521,7 @@ namespace Waveplus.CureHand
                 InstalledSensorsTextBox.Text = _installedSensor.ToString();
                 
                 // Set sensors state controls visibility
-                for (var c = 0; c < DeviceConstant.MAX_SENSORS_NUM; c++)
+                for (var c = 0; c < DeviceConstant.MAX_DEVICE_SENSORS_NUM; c++)
                 {
                     _sensorBatteryLevelBars[c].Visible = c < _installedSensor;
                     _sensorNumberLabels[c].Visible = c < _installedSensor;
@@ -546,10 +583,25 @@ namespace Waveplus.CureHand
                 StopTriggerScanTextBox.Text = "";
                 _acquiredSamplesPerChannel = 0;
 
+                // creat a new empty csv file for emg data
+                string directoryPath = @"D:\share";
+                string filePath = Path.Combine(directoryPath, "emg_data.csv");
+                if (!Directory.Exists(directoryPath))
+                {
+                    Directory.CreateDirectory(directoryPath);
+                }
+
+                using (StreamWriter writer = new StreamWriter(filePath, false))
+                {
+                    // the header of csv
+                    writer.WriteLine("Time,Sensor1,Sensor2");
+                }
+
                 // Get DataAvailableEvent period
                 var dataAvailableEventPeriod = ((DataAvailableEventPeriod)Enum.Parse(typeof(DataAvailableEventPeriod), comboBoxDataAvailableEventPeriod.SelectedIndex.ToString()));
                 // Start data acquisition
                 _daqSystem.StartCapturing(dataAvailableEventPeriod);
+
             }
             catch (Exception _exception)
             {
@@ -564,6 +616,13 @@ namespace Waveplus.CureHand
             {
                 // Stop data capture process
                 _daqSystem.StopCapturing();
+
+                // delete data file
+                string filePath = @"D:\share\emg_data.csv";
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
             }
             catch (Exception _exception)
             {
