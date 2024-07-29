@@ -3,6 +3,13 @@
 /Exo_rebuilt/image
 /Exo_rebuilt/__pycache__
 
+# Cometa WavePlus SDK
+/Waveplus.Daq_SDK_5.0.7_2020_04_16
+
+# C sharp compiled files
+/EMG/CureHandCometaWavePlus/bin
+/EMG/CureHandCometaWavePlus/obj
+
 # dynamixle workbench
 src/dynamixel-workbench
 src/dynamixel-workbench-msgs
