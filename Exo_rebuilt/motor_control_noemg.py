@@ -13,7 +13,6 @@ from dynamixel_msgs.msg import JointState as JointStateDynamixel
 import time
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from scipy import signal
 
 class MotorController():
@@ -71,11 +70,6 @@ class MotorController():
         self.time_array = []
         self.load_array = []
         self.starting_time = 0
-
-        # emg data storage
-        self.emg_start_index = 0
-        self.emg_end_index = 0
-        self.file_path = '/mnt/hgfs/share/emg_data.csv'
     
     # Subscrib the current position of four motors 
     def callbackAngle(self, motor_ID):
@@ -115,9 +109,6 @@ class MotorController():
             self.mode = int(mode)  # Convert mode to int
             self.motor = int(motor)  # Convert motor to int
             self.maxvel = float(maxvel)  # Convert maxvel to float
-
-            df = pd.read_csv(self.file_path)
-            self.emg_start_index = df.shape[0]
             
             current_position = self.angles[self.motor]
             self.goal_position = current_position + float(distance)
@@ -134,8 +125,8 @@ class MotorController():
         elif len(params) == 1:
             mode = params[0]
             self.mode = int(mode)
-            rospy.loginfo("stop: " + str(mode))
             self.count -= 1
+            rospy.loginfo("stop: " + str(mode))
 
         elif len(params) == 2:
             mode, inimode = params
@@ -181,7 +172,7 @@ class MotorController():
         return complete
         
     def controlloop(self):
-        rate = rospy.Rate(50)
+        rate = rospy.Rate(100)
         rospy.loginfo("initialised assessment")
         while not rospy.is_shutdown():
             try:
@@ -216,7 +207,7 @@ class MotorController():
         elif self.inimode == 1:
             flag[0] = self.setPos(0, 1)
             # time.sleep(0.5)
-            flag[1] = self.setPos(1, 1.8)
+            flag[1] = self.setPos(1, 1.9)
             # time.sleep(0.5)
             flag[2] = self.setPos(2, 1.7)
             # time.sleep(0.5)
@@ -252,8 +243,6 @@ class MotorController():
             rospy.loginfo("Stop for 0.5s")   
         else:
             rospy.loginfo("Complete the assessment")
-            df = pd.read_csv(self.file_path)
-            self.emg_end_index = df.shape[0]
             # save data
             self.saveData(self.time_array, self.force_array, self.angle_array, self.load_array, self.joints[ID])
             # draw plot
@@ -276,43 +265,9 @@ class MotorController():
         force_array = np.array(force_array)
         load_array = np.array(load_array)
 
-        # data = np.array([time_array,angle_array,force_array,load_array]).T
-        # var_name = 'time,angle,force,load'
-        # np.savetxt(savepath, data, delimiter=',',header =var_name)
-        combined_df = pd.DataFrame({
-            'time': (time_array - time_array[0])*1000,
-            'angle': angle_array,
-            'force': force_array,
-            'load': load_array
-        })
-
-        df = pd.read_csv(self.file_path)
-        emg_time = df['Time'][self.emg_start_index:self.emg_end_index].values
-        emg_time = emg_time - emg_time[0]
-        emg_data1 = df['Sensor1'][self.emg_start_index:self.emg_end_index].values
-        emg_data2 = df['Sensor2'][self.emg_start_index:self.emg_end_index].values
-
-        emg_df = pd.DataFrame({
-            'time': emg_time,
-            'emg1': emg_data1,
-            'emg2': emg_data2
-        })
-
-        # merge the two dataframes according to the emg time
-        combined_df = pd.merge_asof(emg_df, combined_df, on='time', direction='nearest')
-        # fill the missing values
-        combined_df['angle'] = combined_df['angle'].interpolate(method='linear')
-        combined_df['force'] = combined_df['force'].interpolate(method='linear')
-        combined_df['load'] = combined_df['load'].interpolate(method='linear')
-
-        # fill the remaining missing values
-        combined_df['angle'].fillna(0, inplace=True)
-        combined_df['force'].fillna(0, inplace=True)
-        combined_df['load'].fillna(0, inplace=True)
-        combined_df['emg1'].fillna(0, inplace=True)
-        combined_df['emg2'].fillna(0, inplace=True)
-
-        combined_df.to_csv(savepath, index=False)
+        data = np.array([time_array,angle_array,force_array,load_array]).T
+        var_name = 'time,angle,force,load'
+        np.savetxt(savepath, data, delimiter=',',header =var_name)
         
     # Plot the force and angle curves
     def plotCurves(self, time_array, force_array, angle_array, load_array, joint_name):
