@@ -8,7 +8,7 @@ https://wiki.ros.org/noetic/Installation/Ubuntu
 ## 2. clone this repository
 ```
 python3 -m venv .venv
-source .venv/bin/activate
+py
 git clone --recursive https://github.com/hiicaptain/CureHandExo.git
 #deactivate
 ```

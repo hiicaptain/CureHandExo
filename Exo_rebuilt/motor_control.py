@@ -49,7 +49,7 @@ class MotorController():
         rospy.Subscriber("/Assessment_mode", String, self.callbackMode)
         
         # PID controller
-        self.rate = 50 # hz
+        self.rate = 40 # hz
         self.KP = 50
         self.KD = 2
         self.KI = 0.2
@@ -181,7 +181,7 @@ class MotorController():
         return complete
         
     def controlloop(self):
-        rate = rospy.Rate(50)
+        rate = rospy.Rate(self.rate)
         rospy.loginfo("initialised assessment")
         while not rospy.is_shutdown():
             try:
@@ -212,15 +212,15 @@ class MotorController():
             # time.sleep(0.5)
             flag[2] = self.setPos(2, 0)
             # time.sleep(0.5)
-            flag[3] = self.setPos(3, 0)
+            flag[3] = self.setPos(3, 0.6)
         elif self.inimode == 1:
-            flag[0] = self.setPos(0, 1)
+            flag[0] = self.setPos(0, 1.2)
             # time.sleep(0.5)
-            flag[1] = self.setPos(1, 1.8)
+            flag[1] = self.setPos(1, 1.9)
             # time.sleep(0.5)
             flag[2] = self.setPos(2, 1.7)
             # time.sleep(0.5)
-            flag[3] = self.setPos(3, 0)
+            flag[3] = self.setPos(3, 1.6)
         if sum(flag) == 4:
             self.mode = 99
             rospy.loginfo("Initialisation complete")
@@ -235,7 +235,7 @@ class MotorController():
         if  time_tag <= 0.5:
             self.setVel(ID, 0)
             rospy.loginfo("Wait for 0.5s")
-        elif time_tag <= 4.5 and time_tag > 0.5 and abs(e) > 0.05:
+        elif time_tag <= 4.5 and time_tag > 0.5 and abs(e) > 0.7:
             e_d = (e - self.e_old)/self.dt
             self.e_i = self.e_i + e*self.dt
             self.e_old = e
@@ -244,7 +244,7 @@ class MotorController():
                 vel = self.maxvel*np.sign(vel)
             self.setVel(ID, vel)
             rospy.loginfo("Moving")
-        elif time_tag <= 4.5 and time_tag > 0.5 and abs(e) <= 0.05:
+        elif time_tag <= 4.5 and time_tag > 0.5 and abs(e) <= 0.7:
             self.setVel(ID, 0)
             rospy.loginfo("arriving")
         elif time_tag > 4.5 and time_tag <= 5.0:
@@ -260,6 +260,7 @@ class MotorController():
             self.plotCurves(self.time_array, self.force_array, self.angle_array, self.load_array, self.joints[ID])
             # reset the mode
             self.mode = 99
+
 
         self.angle_array.append(angle)
         self.force_array.append(self.forces[ID])
