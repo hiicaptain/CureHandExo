@@ -63,6 +63,8 @@ sudo chmod a+rw /dev/ttyUSB0
 ```
 
 # Debug
+You may need to change the port names in 'dynamixel.launch' and 'sensor_vale.py' according to the serial ports that you connect to dynamixel servos and arduino board.
+
 This run file configures the usb latency timer to 1 ms. If you want to check this setting, run the following command in a terminal window.
 ```
 # check the latency time
@@ -70,5 +72,36 @@ cat /sys/bus/usb-serial/devices/ttyUSB0/latency_timer
 # set the latency time to 1 ms
 echo 1 | sudo tee /sys/bus/usb-serial/devices/ttyUSB0/latency_timer
 ```
+
+You may also need to set the serial port readable. Please remember to change the correct port name.
+```
+sudo chmod 777 /dev/ttyUSB0
+```
+
+# Running
+There are two ways to run the exoskeleton control system: using the automated startup script or launching components manually.
+
+## Method 1: Automatic Startup
+From the following directory: CureHandExo/Exo_rebuilt/, run: 
+```
+./start.sh. 
+```
+This script automatically launches all required ROS nodes, background processes, and the GUI.
+
+## Method 2: Manual Launch
+Open separate terminals and run the following commands in order:
+```
+# Launch the Dynamixel ROS controller (automatically detects the four motors):
+roslaunch dynamixel.launch
+# Launch the meta controller containing motor configuration parameters:
+roslaunch meta_controller.launch
+# Start the Arduino sensor interface, which records angle and force data and publishes them as ROS topics (ensure the correct port is selected):
+python3 sensor_value.py
+# Run the motor control backend, responsible for reading motor states and forwarding control commands:
+python3 motor_control_noemg.py
+# Launch the experimental GUI:
+python3 experiment.py
+```
+
 
 
